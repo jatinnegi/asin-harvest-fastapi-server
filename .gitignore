@@ -32,7 +32,6 @@ archive.zip
 .codspeed
 
 .env
-public/*
 credentials.json
 google_oauth_authorize.py
 service_account.json
