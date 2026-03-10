@@ -2,6 +2,7 @@ import re
 import asyncio
 import json
 import random
+from urllib.parse import urlencode
 from datetime import datetime
 from pathlib import Path
 from bs4 import BeautifulSoup
@@ -248,13 +249,17 @@ async def fetch_asin_code_html_response(
         ASIN code and it's HTML response or None
     """
 
-    target_url = f"https://{amazon_marketplace}/dp/{asin_code}"
-
-    request_headers = get_random_request_headers()
+    AMAZON_URL = f"https://{amazon_marketplace}/dp/{asin_code}"
+    SCRAPPING_API_TOKEN = os.environ["SCRAPPING_API_TOKEN"]
+    params = {
+        "url": AMAZON_URL,
+        "token": SCRAPPING_API_TOKEN
+    }
+    target_url = f"http://api.scrape.do/?{urlencode(params)}"
 
     async with semaphore:
         try:
-            response = await client.get(target_url, headers=request_headers, timeout=20)
+            response = await client.get(target_url, timeout=20)
             response.raise_for_status()
             return asin_code, response.text
         except Exception as e:
@@ -345,8 +350,17 @@ def retrieve_data_from_html_response(asin_code: str, html_response: str | None) 
         product_data["Title"] = "-"
 
     if product_description_el:
-        product_description_value = product_description_el.get_text(strip=True)
-        product_data["Description"] = product_description_value
+        product_description_value = ""
+        product_description_list_items = product_description_el.select("ul li")
+        for product_description_list_item in product_description_list_items:
+            product_description_value += f"• {product_description_list_item.get_text(strip=True)} "
+        
+        product_description_value = product_description_value.strip()
+
+        if product_description_value == "":
+            product_data["Description"] = "-"
+        else:
+            product_data["Description"] = product_description_value
     else:
         product_data["Description"] = "-"
 

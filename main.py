@@ -104,8 +104,8 @@ async def retrieve_asin_codes(
             if cleaned:
                 asin_codes.append(cleaned)
 
-    reduced = len(asin_codes) > 50
-    asin_codes = asin_codes[:50]
+    reduced = len(asin_codes) > 10
+    asin_codes = asin_codes[:10]
 
     return JSONResponse({
         "reduced": reduced,
@@ -163,8 +163,10 @@ async def websocket_endpoint(websocket: WebSocket):
                     })
                     break
 
+                BATCH_SIZE = 5 # Allowed concurrency for most scrapping services is 5. Adjusted accordingly. (Service, account tier etc.)
+
                 # For live progress UI in client
-                total_steps = int(max(1, len(asin_codes) / 10))
+                total_steps = int(max(1, len(asin_codes) / BATCH_SIZE))
                 progress = 0
                 progress_step_value = 68 / total_steps
                 steps = [8, 22]
@@ -197,7 +199,7 @@ async def websocket_endpoint(websocket: WebSocket):
 
                 batches = create_batches(
                     items=asin_codes,
-                    batch_size=10
+                    batch_size=BATCH_SIZE
                 )
                 total_batches = len(batches)
 
