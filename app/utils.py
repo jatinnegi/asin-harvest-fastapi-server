@@ -473,7 +473,8 @@ def export_data_excel(rows=List[Dict[str, Optional[str]]]) -> str:
             engine="openpyxl"
         )
 
-        link = f"http://localhost:8080/public/{filename}"
+        BASE_URL = os.environ["BASE_URL"]
+        link = f"{BASE_URL}/public/{filename}"
         return link
     except Exception as e:
         print(e)
